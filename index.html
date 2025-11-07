@@ -1,116 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>تطبيق نظم المعلومات الجغرافية - JoUTricks</title>
-
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-    <!-- Optional: Leaflet Fullscreen / Draw CSS (if used) -->
-    <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-    <header class="header">
-        <div class="header-content">
-            <img src="logo.png" alt="JoUTricks Logo" class="logo-img" />
-            <h1>تطبيق نظم المعلومات الجغرافية</h1>
-            <div class="header-actions">
-                <button id="logoutBtn" class="btn-logout" title="تسجيل الخروج" style="display:none;">تسجيل الخروج</button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Login Modal -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <img src="logo.png" class="logo-img login-logo" alt="logo"/>
-                <h2>تسجيل الدخول</h2>
-            </div>
-            <div class="modal-body">
-                <form id="loginForm">
-                    <p>يرجى إدخال اسم المستخدم وكلمة المرور للوصول إلى التطبيق.</p>
-                    <div class="form-group">
-                        <label for="username">اسم المستخدم:</label>
-                        <input type="text" id="username" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="password">كلمة المرور:</label>
-                        <input type="password" id="password" required />
-                    </div>
-                    <div id="loginError" class="error-message"></div>
-                    <button type="submit" class="btn-login">دخول</button>
-                </form>
-                <p class="hint-text">بيانات تجريبية: <strong>jou / tricks</strong></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main App -->
-    <div id="appContainer" class="hidden">
-        <div class="main-container">
-            <aside class="sidebar">
-                <div class="sidebar-content">
-                    <div class="section">
-                        <h3>📂 رفع البيانات</h3>
-                        <div id="uploadArea" class="upload-area">
-                            <p>اسحب ملفات GeoJSON / ZIP (Shapefile) هنا أو اضغط للاختيار</p>
-                            <p class="small-text">الدعم: .geojson, .json, .zip</p>
-                            <input id="fileInput" type="file" accept=".geojson,.json,.zip" style="display:none;" />
-                        </div>
-                        <div id="uploadStatus" class="upload-status"></div>
-                    </div>
-
-                    <div class="section">
-                        <h3>🗂️ الطبقات</h3>
-                        <div id="layersList" class="layers-list"></div>
-                    </div>
-
-                    <div class="section">
-                        <h3>🔎 بحث في السمات (Attribute Search)</h3>
-                        <div class="form-group">
-                            <label for="searchField">اسم الحقل:</label>
-                            <input id="searchField" type="text" placeholder="مثال: name, id, type" />
-                        </div>
-                        <div class="form-group">
-                            <label for="searchValue">قيمة البحث:</label>
-                            <input id="searchValue" type="text" placeholder="مثال: Cairo" />
-                        </div>
-                        <button id="searchBtn" class="btn-control">بحث</button>
-                        <div id="searchStatus" class="upload-status"></div>
-                    </div>
-
-                    <div class="section">
-                        <h3>🎛️ تحكم الخريطة</h3>
-                        <button id="zoomInBtn" class="btn-control">تكبير (+)</button>
-                        <button id="zoomOutBtn" class="btn-control">تصغير (-)</button>
-                        <button id="resetMapBtn" class="btn-control">إعادة تعيين</button>
-                        <button id="clearLayersBtn" class="btn-control btn-danger">حذف جميع الطبقات</button>
-                    </div>
-
-                    <div class="section">
-                        <h3>📋 معلومات العنصر</h3>
-                        <div id="featureInfo" class="feature-info">
-                            <p class="empty-message">انقر على عنصر لعرض معلوماته هنا</p>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <main class="map-container">
-                <div id="map" class="map"></div>
-            </main>
-        </div>
-    </div>
-
-    <!-- Leaflet and helpers -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/shpjs@latest/dist/shp.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-    <!-- Your script -->
-    <script src="script.js"></script>
-</body>
-</html>
