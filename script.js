@@ -303,3 +303,4 @@ function exportSelectedAsShapefile(){
     alert('تعذر إنشاء Shapefile لهذا النوع من البيانات. يدعم النقاط والخطوط والمضلعات فقط.');
   }
 }
+document.getElementById('styleCancelBtn').addEventListener('click', () => toggleStyleModal(false));
