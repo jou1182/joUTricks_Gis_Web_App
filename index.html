@@ -1,145 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق عارض نظم المعلومات الجغرافية - GIS Viewer</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.min.css" />
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
-    
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🔐 تسجيل الدخول</h2>
-            </div>
-            <div class="modal-body">
-                <p>يرجى إدخال بيانات الاعتماد للوصول إلى التطبيق</p>
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label for="username">اسم المستخدم:</label>
-                        <input type="text" id="username" name="username" placeholder="أدخل اسم المستخدم" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">كلمة المرور:</label>
-                        <input type="password" id="password" name="password" placeholder="أدخل كلمة المرور" required>
-                    </div>
-                    <div id="loginError" class="error-message"></div>
-                    <button type="submit" class="btn-login">دخول</button>
-                </form>
-                <p class="hint-text">💡 بيانات تجريبية: gisuser / gispass</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="styleModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🎨 تخصيص نمط الطبقة</h2>
-            </div>
-            <div class="modal-body">
-                <p>يرجى اختيار النمط للطبقة: <strong id="styleLayerName"></strong></p>
-                <form id="styleForm">
-                    <div class="form-group">
-                        <label for="layerColor">لون الخط/التعبئة:</label>
-                        <input type="color" id="layerColor" name="layerColor" value="#FF6B6B">
-                    </div>
-                    <div class="form-group">
-                        <label for="layerWeight">سماكة الخط (لخطوط والمضلعات):</label>
-                        <input type="number" id="layerWeight" name="layerWeight" value="2" min="1" max="10">
-                    </div>
-                    <div class="form-group">
-                        <label for="layerOpacity">شفافية التعبئة (للمضلعات 0-1):</label>
-                        <input type="range" id="layerOpacity" name="layerOpacity" value="0.5" min="0" max="1" step="0.1">
-                    </div>
-                     <div class="form-group">
-                        <label for="pointRadius">حجم النقطة (للنقاط):</label>
-                        <input type="number" id="pointRadius" name="pointRadius" value="6" min="1" max="20">
-                    </div>
-                    <button type="submit" class="btn-login">إضافة الطبقة</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-
-    <div id="appContainer" class="hidden">
-        <header class="header">
-            <div class="header-content">
-                <h1>📍 تطبيق عارض نظم المعلومات الجغرافية</h1>
-                <div class="header-actions">
-                    <button id="logoutBtn" class="btn-logout" title="تسجيل الخروج">تسجيل الخروج</button>
-                </div>
-            </div>
-        </header>
-
-        <div class="main-container">
-            <aside class="sidebar">
-                <div class="sidebar-content">
-                    <div class="section">
-                        <h3>📁 رفع البيانات</h3>
-                        <div class="upload-area" id="uploadArea">
-                            <p>اسحب ملفات GeoJSON, Shapefile, KML, KMZ هنا</p>
-                            <p class="small-text">أو اضغط لاختيار ملف</p>
-                            <input type="file" id="fileInput" multiple accept=".geojson,.json,.zip,.shp,.dbf,.shx,.kml,.kmz" style="display: none;">
-                        </div>
-                        <div id="uploadStatus" class="upload-status"></div>
-                    </div>
-
-                    <div class="section">
-                        <h3>🗺️ الطبقات</h3>
-                        <div id="layersList" class="layers-list">
-                            <p class="empty-message">لا توجد طبقات مضافة</p>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <h3>🔗 المشاركة</h3>
-                        <button id="shareBtn" class="btn-share">نسخ رابط المشاركة</button>
-                        <div id="shareStatus" class="share-status"></div>
-                    </div>
-
-                    <div class="section">
-                        <h3>🎮 التحكم</h3>
-                        <button id="zoomInBtn" class="btn-control">تكبير (+)</button>
-                        <button id="zoomOutBtn" class="btn-control">تصغير (-)</button>
-                        <button id="resetMapBtn" class="btn-control">إعادة تعيين الخريطة</button>
-                        <button id="clearLayersBtn" class="btn-control btn-danger">حذف جميع الطبقات</button>
-                    </div>
-
-                    <div class="section">
-                        <h3>📋 معلومات الطبقة</h3>
-                        <div id="featureInfo" class="feature-info">
-                            <p class="empty-message">انقر على عنصر في الخريطة لعرض معلوماته</p>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <main class="map-container">
-                <div id="map" class="map"></div>
-            </main>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.min.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/shpjs@latest/dist/shp.min.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
-    
-    <script src="script.js"></script>
-</body>
-</html>
