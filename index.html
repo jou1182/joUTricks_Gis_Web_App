@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JoUTricks GIS Viewer — v3</title>
+  <title>JoUTricks GIS Viewer – v3</title>
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -25,8 +25,12 @@
 <body>
   <header class="header">
     <div class="header-content">
-      <img src="logo.png" alt="JoUTricks Logo" class="logo-img" />
-      <h1>JoUTricks GIS Viewer <span class="badge">v3</span></h1>
+      <div style="display:flex;align-items:center;gap:15px">
+        <div class="logo-img" style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;color:#504C5B">
+          JoU
+        </div>
+        <h1 style="margin:0">JoUTricks GIS Viewer <span class="badge">v3</span></h1>
+      </div>
       <div class="header-actions">
         <button id="saveSessionBtn" class="btn small">حفظ الجلسة</button>
         <button id="clearSessionBtn" class="btn small">مسح الجلسة</button>
@@ -36,11 +40,13 @@
   </header>
 
   <!-- Login Modal -->
-  <div id="loginModal" class="modal">
+  <div id="loginModal" class="modal show">
     <div class="modal-content">
       <div class="modal-header">
-        <img src="logo.png" class="login-logo" />
-        <h2>تسجيل الدخول</h2>
+        <div class="login-logo" style="width:150px;height:150px;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:bold;color:#504C5B">
+          JoU
+        </div>
+        <h2 style="margin:10px 0 0 0">تسجيل الدخول</h2>
       </div>
       <div class="modal-body">
         <form id="loginForm">
@@ -62,6 +68,7 @@
           <h3>📂 رفع البيانات</h3>
           <div id="uploadArea" class="upload-area">
             <p>اسحب ملفات <strong>GeoJSON / Shapefile(ZIP) / KML / KMZ / GPX / CSV / TopoJSON / WKT</strong> هنا</p>
+            <p style="font-size:12px;color:#666;margin-top:8px">أو انقر للاختيار</p>
             <input id="fileInput" type="file"
               accept=".geojson,.json,.zip,.kml,.kmz,.gpx,.csv,.topojson,.wkt,.txt"
               style="display:none;" />
@@ -71,7 +78,9 @@
 
         <section class="section">
           <h3>🗂️ الطبقات</h3>
-          <div id="layersList" class="layers-list"></div>
+          <div id="layersList" class="layers-list">
+            <p class="empty-message">لا توجد طبقات مضافة</p>
+          </div>
         </section>
 
         <section class="section">
@@ -104,21 +113,21 @@
   </div>
 
   <!-- Style Editor Modal -->
- <div id="styleModal" class="modal hidden">
+  <div id="styleModal" class="modal hidden">
     <div class="modal-content small">
       <div class="modal-header">
-        <h2>تعديل النمط</h2>
+        <h2 style="margin:0">تعديل النمط</h2>
       </div>
       <div class="modal-body">
         <div class="grid">
           <label>اللون: <input type="color" id="styleColor" value="#ff6b6b"></label>
-          <label>سماكة الخط: <input type="range" id="styleWeight" min="1" max="8" value="2"></label>
-          <label>شفافية التعبئة: <input type="range" id="styleFill" min="0" max="1" step="0.05" value="0.4"></label>
-          <label>حجم النقاط: <input type="range" id="styleRadius" min="3" max="20" value="6"></label>
+          <label>سماكة الخط: <input type="range" id="styleWeight" min="1" max="8" value="2"><span id="weightVal">2</span></label>
+          <label>شفافية التعبئة: <input type="range" id="styleFill" min="0" max="1" step="0.05" value="0.4"><span id="fillVal">0.4</span></label>
+          <label>حجم النقاط: <input type="range" id="styleRadius" min="3" max="20" value="6"><span id="radiusVal">6</span></label>
           <label>شكل النقطة:
             <select id="styleShape">
-              <option value="circle">Circle</option>
-              <option value="marker">Marker</option>
+              <option value="circle">دائرة</option>
+              <option value="marker">علامة</option>
             </select>
           </label>
         </div>
