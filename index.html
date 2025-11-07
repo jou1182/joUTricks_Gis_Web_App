@@ -2,49 +2,85 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>تطبيق نظم المعلومات الجغرافية - JoUTricks</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="تطبيق نظم المعلومات الجغرافية التعليمي - JoUTricks" />
+    <meta name="author" content="Dr. Youssef Seleim - JoUTricks" />
+    <title>تطبيق نظم المعلومات الجغرافية - JoUTricks v3.5</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png" />
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-    <!-- Optional: Leaflet Fullscreen / Draw CSS (if used) -->
+    
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="style.css" />
 
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/shpjs@latest/dist/shp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+    <script src="https://unpkg.com/shp-write@latest/shpwrite.js"></script>
 </head>
 <body>
+    <!-- Header -->
     <header class="header">
         <div class="header-content">
-            <img src="logo.png" alt="JoUTricks Logo" class="logo-img" />
-            <h1>تطبيق نظم المعلومات الجغرافية</h1>
+            <div class="header-left">
+                <img src="logo.png" alt="JoUTricks Logo" class="logo-img" onerror="this.style.display='none'" />
+                <div class="header-title">
+                    <h1>تطبيق نظم المعلومات الجغرافية</h1>
+                    <p class="header-subtitle">JoUTricks GIS Viewer v3.5</p>
+                </div>
+            </div>
             <div class="header-actions">
-                <button id="logoutBtn" class="btn-logout" title="تسجيل الخروج" style="display:none;">تسجيل الخروج</button>
+                <button id="saveSessionBtn" class="btn-header" title="حفظ الجلسة الحالية">
+                    <span class="icon">💾</span> حفظ الجلسة
+                </button>
+                <button id="loadSessionBtn" class="btn-header" title="استعادة جلسة محفوظة">
+                    <span class="icon">📂</span> استعادة الجلسة
+                </button>
+                <button id="logoutBtn" class="btn-logout" title="تسجيل الخروج" style="display:none;">
+                    <span class="icon">🚪</span> تسجيل الخروج
+                </button>
             </div>
         </div>
     </header>
 
     <!-- Login Modal -->
     <div id="loginModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content login-modal">
             <div class="modal-header">
-                <img src="logo.png" class="logo-img login-logo" alt="logo"/>
-                <h2>تسجيل الدخول</h2>
+                <img src="logo.png" class="login-logo" alt="JoUTricks Logo" onerror="this.style.display='none'" />
+                <h2>🔐 تسجيل الدخول</h2>
+                <p class="modal-subtitle">مرحباً بك في تطبيق نظم المعلومات الجغرافية</p>
             </div>
             <div class="modal-body">
                 <form id="loginForm">
-                    <p>يرجى إدخال اسم المستخدم وكلمة المرور للوصول إلى التطبيق.</p>
                     <div class="form-group">
-                        <label for="username">اسم المستخدم:</label>
-                        <input type="text" id="username" required />
+                        <label for="username">
+                            <span class="icon">👤</span> اسم المستخدم:
+                        </label>
+                        <input type="text" id="username" placeholder="أدخل اسم المستخدم" required autofocus />
                     </div>
                     <div class="form-group">
-                        <label for="password">كلمة المرور:</label>
-                        <input type="password" id="password" required />
+                        <label for="password">
+                            <span class="icon">🔑</span> كلمة المرور:
+                        </label>
+                        <input type="password" id="password" placeholder="أدخل كلمة المرور" required />
                     </div>
                     <div id="loginError" class="error-message"></div>
-                    <button type="submit" class="btn-login">دخول</button>
+                    <button type="submit" class="btn-login">
+                        <span class="icon">🚀</span> دخول
+                    </button>
                 </form>
-                <p class="hint-text">بيانات تجريبية: <strong>jou / tricks</strong></p>
+                <div class="hint-box">
+                    <p class="hint-text">💡 <strong>بيانات تجريبية:</strong></p>
+                    <code>Username: jou | Password: tricks</code>
+                </div>
             </div>
         </div>
     </div>
@@ -52,25 +88,42 @@
     <!-- Main App -->
     <div id="appContainer" class="hidden">
         <div class="main-container">
+            <!-- Sidebar -->
             <aside class="sidebar">
                 <div class="sidebar-content">
+                    <!-- Upload Section -->
                     <div class="section">
-                        <h3>📂 رفع البيانات</h3>
+                        <h3 class="section-title">
+                            <span class="icon">📂</span> رفع البيانات الجغرافية
+                        </h3>
                         <div id="uploadArea" class="upload-area">
-                            <p>اسحب ملفات GeoJSON / ZIP (Shapefile) هنا أو اضغط للاختيار</p>
-                            <p class="small-text">الدعم: .geojson, .json, .zip</p>
-                            <input id="fileInput" type="file" accept=".geojson,.json,.zip" style="display:none;" />
+                            <div class="upload-icon">📁</div>
+                            <p class="upload-text">اسحب الملفات هنا أو اضغط للاختيار</p>
+                            <p class="upload-formats">
+                                <strong>الصيغ المدعومة:</strong><br/>
+                                GeoJSON, Shapefile (ZIP), KML, KMZ, GPX, CSV, TopoJSON, WKT
+                            </p>
+                            <input id="fileInput" type="file" accept=".geojson,.json,.zip,.kml,.kmz,.gpx,.csv,.topojson,.wkt" style="display:none;" multiple />
                         </div>
-                        <div id="uploadStatus" class="upload-status"></div>
+                        <div id="uploadStatus" class="status-message"></div>
                     </div>
 
+                    <!-- Layers Section -->
                     <div class="section">
-                        <h3>🗂️ الطبقات</h3>
-                        <div id="layersList" class="layers-list"></div>
+                        <h3 class="section-title">
+                            <span class="icon">🗂️</span> إدارة الطبقات
+                            <span class="layer-count" id="layerCount">(0)</span>
+                        </h3>
+                        <div id="layersList" class="layers-list">
+                            <p class="empty-message">لا توجد طبقات مضافة بعد</p>
+                        </div>
                     </div>
 
+                    <!-- Attribute Search Section -->
                     <div class="section">
-                        <h3>🔎 بحث في السمات (Attribute Search)</h3>
+                        <h3 class="section-title">
+                            <span class="icon">🔎</span> البحث في السمات
+                        </h3>
                         <div class="form-group">
                             <label for="searchField">اسم الحقل:</label>
                             <input id="searchField" type="text" placeholder="مثال: name, id, type" />
@@ -79,73 +132,167 @@
                             <label for="searchValue">قيمة البحث:</label>
                             <input id="searchValue" type="text" placeholder="مثال: Cairo" />
                         </div>
-                        <button id="searchBtn" class="btn-control">بحث</button>
-                        <div id="searchStatus" class="upload-status"></div>
+                        <button id="searchBtn" class="btn-control btn-primary">
+                            <span class="icon">🔍</span> بحث
+                        </button>
+                        <div id="searchStatus" class="status-message"></div>
                     </div>
 
+                    <!-- Map Controls Section -->
                     <div class="section">
-                        <h3>🎛️ تحكم الخريطة</h3>
-                        <button id="zoomInBtn" class="btn-control">تكبير (+)</button>
-                        <button id="zoomOutBtn" class="btn-control">تصغير (-)</button>
-                        <button id="resetMapBtn" class="btn-control">إعادة تعيين</button>
-                        <button id="clearLayersBtn" class="btn-control btn-danger">حذف جميع الطبقات</button>
+                        <h3 class="section-title">
+                            <span class="icon">🎛️</span> أدوات التحكم
+                        </h3>
+                        <div class="control-buttons">
+                            <button id="zoomInBtn" class="btn-control" title="تكبير">
+                                <span class="icon">🔍+</span> تكبير
+                            </button>
+                            <button id="zoomOutBtn" class="btn-control" title="تصغير">
+                                <span class="icon">🔍-</span> تصغير
+                            </button>
+                            <button id="resetMapBtn" class="btn-control" title="إعادة تعيين">
+                                <span class="icon">🏠</span> إعادة تعيين
+                            </button>
+                            <button id="clearLayersBtn" class="btn-control btn-danger" title="حذف جميع الطبقات">
+                                <span class="icon">🗑️</span> حذف الكل
+                            </button>
+                        </div>
                     </div>
 
+                    <!-- Feature Info Section -->
                     <div class="section">
-                        <h3>📋 معلومات العنصر</h3>
+                        <h3 class="section-title">
+                            <span class="icon">ℹ️</span> معلومات العنصر
+                        </h3>
                         <div id="featureInfo" class="feature-info">
-                            <p class="empty-message">انقر على عنصر لعرض معلوماته هنا</p>
+                            <p class="empty-message">انقر على عنصر في الخريطة لعرض معلوماته</p>
                         </div>
                     </div>
                 </div>
             </aside>
 
+            <!-- Map Container -->
             <main class="map-container">
                 <div id="map" class="map"></div>
+                <div class="map-loading" id="mapLoading" style="display:none;">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل الخريطة...</p>
+                </div>
             </main>
         </div>
     </div>
 
-    <!-- Leaflet and helpers -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/shpjs@latest/dist/shp.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-    <!-- Your script -->
-    <script src="script.js"></script>
-
-    <!-- Additional Libraries (Moved from head for performance) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://unpkg.com/topojson-client@3"></script>
-    <script src="https://unpkg.com/shp-write@latest/shpwrite.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/terraformer-wkt-parser/1.2.1/terraformer-wkt-parser.min.js"></script>
-
-  <!-- Layer Picker Modal -->
-  <div id="layerPickerModal" class="modal hidden">
-    <div class="modal-content medium">
-      <div class="modal-header">
-        <h2>📚 اختيار الطبقة</h2>
-      </div>
-      <div class="modal-body">
-        <p id="layerFileName" class="small-text"></p>
-        <table class="layer-table">
-          <thead>
-            <tr>
-              <th>اسم الطبقة</th>
-              <th>النوع</th>
-              <th>عدد المعالم</th>
-              <th>الإجراء</th>
-            </tr>
-          </thead>
-          <tbody id="layerPickerTable"></tbody>
-        </table>
-        <div class="actions">
-          <button id="cancelLayerPicker" class="btn btn-secondary">إغلاق</button>
+    <!-- Layer Picker Modal -->
+    <div id="layerPickerModal" class="modal hidden">
+        <div class="modal-content medium">
+            <div class="modal-header">
+                <h2><span class="icon">📚</span> اختيار الطبقة</h2>
+            </div>
+            <div class="modal-body">
+                <p id="layerFileName" class="info-text"></p>
+                <div class="table-container">
+                    <table class="layer-table">
+                        <thead>
+                            <tr>
+                                <th>اسم الطبقة</th>
+                                <th>نوع الهندسة</th>
+                                <th>عدد المعالم</th>
+                                <th>الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="layerPickerTable"></tbody>
+                    </table>
+                </div>
+                <div class="modal-actions">
+                    <button id="cancelLayerPicker" class="btn-secondary">
+                        <span class="icon">✖️</span> إغلاق
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
+    <!-- Style Editor Modal -->
+    <div id="styleEditorModal" class="modal hidden">
+        <div class="modal-content medium">
+            <div class="modal-header">
+                <h2><span class="icon">🎨</span> تعديل نمط الطبقة</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="styleColor">
+                        <span class="icon">🎨</span> اللون:
+                    </label>
+                    <div class="color-input-group">
+                        <input type="color" id="styleColor" value="#ff6b6b" />
+                        <input type="text" id="styleColorText" value="#ff6b6b" placeholder="#FF6B6B" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="styleWeight">
+                        <span class="icon">📏</span> سماكة الخط: <span id="weightValue">2</span>
+                    </label>
+                    <input type="range" id="styleWeight" min="1" max="10" value="2" step="1" />
+                </div>
+                <div class="form-group">
+                    <label for="styleOpacity">
+                        <span class="icon">💧</span> الشفافية: <span id="opacityValue">0.4</span>
+                    </label>
+                    <input type="range" id="styleOpacity" min="0" max="1" value="0.4" step="0.1" />
+                </div>
+                <div class="form-group">
+                    <label for="styleRadius">
+                        <span class="icon">⚫</span> حجم النقاط: <span id="radiusValue">6</span>
+                    </label>
+                    <input type="range" id="styleRadius" min="2" max="20" value="6" step="1" />
+                </div>
+                <div class="form-group">
+                    <label for="styleShape">
+                        <span class="icon">📍</span> شكل النقاط:
+                    </label>
+                    <select id="styleShape">
+                        <option value="circle">دائرة (Circle)</option>
+                        <option value="marker">علامة (Marker)</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button id="applyStyleBtn" class="btn-primary">
+                        <span class="icon">✅</span> تطبيق
+                    </button>
+                    <button id="cancelStyleBtn" class="btn-secondary">
+                        <span class="icon">✖️</span> إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal hidden">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h2><span class="icon">📥</span> تصدير الطبقة</h2>
+            </div>
+            <div class="modal-body">
+                <p>اختر صيغة التصدير:</p>
+                <div class="export-options">
+                    <button id="exportGeoJSON" class="btn-export">
+                        <span class="icon">📄</span> GeoJSON
+                    </button>
+                    <button id="exportShapefile" class="btn-export">
+                        <span class="icon">📦</span> Shapefile (ZIP)
+                    </button>
+                </div>
+                <div class="modal-actions">
+                    <button id="cancelExport" class="btn-secondary">
+                        <span class="icon">✖️</span> إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Script -->
+    <script src="script.js"></script>
 </body>
 </html>
