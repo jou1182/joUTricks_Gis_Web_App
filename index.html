@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تطبيق نظم المعلومات الجغرافية</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <img src="logo.png" alt="GIS Logo" class="logo-img" />
+            <h1>تطبيق نظم المعلومات الجغرافية</h1>
+            <div class="header-actions">
+                <button id="logoutBtn" class="btn-logout">🔓 تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <img src="logo.png" alt="GIS Logo" class="logo-img" />
+                <h2>تسجيل الدخول</h2>
+            </div>
+            <div class="modal-body">
+                <p>يرجى إدخال اسم المستخدم وكلمة المرور للوصول إلى التطبيق.</p>
+                <div class="form-group">
+                    <label for="username">اسم المستخدم:</label>
+                    <input type="text" id="username" name="jou">
+                </div>
+                <div class="form-group">
+                    <label for="password">كلمة المرور:</label>
+                    <input type="password" id="password" name="tricks">
+                </div>
+                <div id="errorMessage" class="error-message">بيانات الدخول غير صحيحة.</div>
+                <button class="btn-login" onclick="handleLogin()">دخول</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container hidden" id="mainApp">
+        <div class="sidebar">
+            <div class="sidebar-content">
+                <div class="section">
+                    <h3>رفع ملفات GIS</h3>
+                    <div class="upload-area" onclick="document.getElementById('fileInput').click();">
+                        <p>انقر هنا لرفع ملفات GeoJSON أو Shapefile</p>
+                        <p class="small-text">الدعم لملف .geojson أو .zip يحتوي على shapefile</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".geojson,.zip" style="display: none;">
+                    <div id="uploadStatus" class="upload-status"></div>
+                </div>
+                <div class="section">
+                    <h3>الطبقات</h3>
+                    <div class="layers-list" id="layersList"></div>
+                    <div class="empty-message" id="noLayersMessage">لا توجد طبقات مضافة بعد.</div>
+                </div>
+                <div class="section">
+                    <button class="btn-share" onclick="generateShareLink()">🔗 مشاركة الخريطة</button>
+                    <button class="btn-control btn-danger" onclick="clearMap()">🗑️ مسح كل الطبقات</button>
+                    <div id="shareStatus" class="share-status"></div>
+                </div>
+            </div>
+        </div>
+        <div class="map-container">
+            <div id="map" class="map"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "القاهرة",
+        "type": "عاصمة",
+        "population": "20076000",
+        "area": "3085",
+        "established": "969"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [31.2357, 30.0444]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "الإسكندرية",
+        "type": "مدينة ساحلية",
+        "population": "5278000",
+        "area": "2679",
+        "established": "332 BC"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [29.9187, 31.2001]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "الجيزة",
+        "type": "محافظة",
+        "population": "4272000",
+        "area": "13184",
+        "established": "1821"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [31.2089, 30.0131]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "الأقصر",
+        "type": "مدينة أثرية",
+        "population": "514000",
+        "area": "2358",
+        "established": "1500 BC"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [32.6421, 25.6872]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "أسوان",
+        "type": "محافظة",
+        "population": "1547000",
+        "area": "25926",
+        "established": "1902"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [32.8872, 24.0889]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "نهر النيل - القسم الشمالي",
+        "type": "نهر",
+        "length": "6650",
+        "importance": "حيوية"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [32.8872, 24.0889],
+          [32.6421, 25.6872],
+          [31.2357, 30.0444],
+          [29.9187, 31.2001]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "منطقة الدلتا",
+        "type": "منطقة زراعية",
+        "area": "24000",
+        "crops": "القمح، الأرز، القطن"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [29.5, 31.5],
+            [30.5, 31.5],
+            [30.8, 30.5],
+            [29.8, 30.2],
+            [29.5, 31.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "الصحراء الغربية",
+        "type": "منطقة صحراوية",
+        "area": "681000",
+        "resources": "نفط، غاز طبيعي"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [25.0, 30.0],
+            [29.5, 30.0],
+            [29.5, 22.0],
+            [25.0, 22.0],
+            [25.0, 30.0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "سيناء",
+        "type": "شبه جزيرة",
+        "area": "61000",
+        "population": "1550000"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [33.5, 31.5],
+            [34.5, 31.5],
+            [34.8, 29.5],
+            [33.5, 29.0],
+            [33.5, 31.5]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
