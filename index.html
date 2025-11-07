@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>تطبيق GIS تفاعلي - رفع Shapefile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-paf6A+I4EsSr8AD+hNOCkGxmM2LhvbHf66nL/SzID8M="
+        crossorigin=""
+    />
+    <!-- Esri Leaflet CSS (optional) -->
+    <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            background: #f5f5f5;
+        }
+        /* شاشة تسجيل الدخول */
+        #login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f0f0f0;
+        }
+        #login-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+        #login-box h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        #login-box input[type="text"],
+        #login-box input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #login-box button {
+            width: 100%;
+            padding: 10px;
+            background: #0078d7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #login-box button:hover {
+            background: #005fa3;
+        }
+        /* الخريطة */
+        #map {
+            height: 100vh;
+            width: 100%;
+            display: none; /* نخفي الخريطة حتى يتم تسجيل الدخول */
+        }
+        /* واجهة شبيهة بـ ArcGIS Web App */
+        .sidebar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 300px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .sidebar h3 {
+            margin-top: 0;
+        }
+        .sidebar input[type="file"] {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .sidebar label {
+            display: block;
+            margin-top: 10px;
+        }
+        .sidebar input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        .sidebar button {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            background: #0078d7;
+            color: white;
+            cursor: pointer;
+        }
+        .sidebar button:hover {
+            background: #005fa3;
+        }
+    </style>
+</head>
+<body>
+
+<div id="login-container">
+    <div id="login-box">
+        <h2>تسجيل الدخول</h2>
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button onclick="login()">دخول</button>
+        <p id="login-error" style="color: red; display:none;">اسم المستخدم أو كلمة المرور غير صحيحة.</p>
+    </div>
+</div>
+
+<!-- عنصر الخريطة -->
+<div id="map"></div>
+<!-- شريط جانبي -->
+<div class="sidebar" id="sidebar" style="display:none;">
+    <h3>أدوات الخريطة</h3>
+    <label>تحميل ملف Shapefile (ZIP):</label>
+    <input type="file" id="shp-upload" accept=".zip" />
+    <label>بحث (حسب خاصية):</label>
+    <input type="text" id="query-input" placeholder="قيمة البحث" />
+    <button onclick="queryFeatures()">بحث</button>
+    <div id="query-results"></div>
+</div>
+
+<!-- Leaflet JS -->
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44I="
+    crossorigin="">
+</script>
+<!-- Esri Leaflet (للباس مطور) -->
+<script src="https://unpkg.com/esri-leaflet@3.0.8/dist/esri-leaflet.js"
+        integrity="sha512-84UMXlPoViH3QXth9G+7cG/z82uquGBpyTwrK/8uaEgkjcKszihkxStX6BaEE5IqfcYwp5JcCcwHooU7T7osXg=="
+        crossorigin=""></script>
+<!-- shpjs لتحويل shapefile إلى GeoJSON -->
+<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+<script>
+    // بيانات اعتماد بسيطة (يمكن تعديلها)
+    const USERNAME = 'admin';
+    const PASSWORD = 'gis2025';
+
+    function login() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        if (user === USERNAME && pass === PASSWORD) {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('map').style.display = 'block';
+            document.getElementById('sidebar').style.display = 'block';
+            initMap();
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+        }
+    }
+
+    let map; // خريطة Leaflet
+    let geojsonLayer; // طبقة GeoJSON المحملة
+    let geojsonData; // بيانات GeoJSON المحملة
+
+    function initMap() {
+        // إنشاء الخريطة وتحديد إحداثيات مركزية (مكة المكرمة كمثال)
+        map = L.map('map').setView([21.4225, 39.8262], 10);
+
+        // استخدام طبقة World Imagery من Esri كخلفية جوية
+        L.esri.basemapLayer('Imagery').addTo(map);
+
+        // معالجة ملف shapefile عند التحميل
+        document.getElementById('shp-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    shp(arrayBuffer).then(function(geojson) {
+                        // إزالة الطبقة القديمة إذا كانت موجودة
+                        if (geojsonLayer) {
+                            map.removeLayer(geojsonLayer);
+                        }
+                        geojsonData = geojson;
+                        geojsonLayer = L.geoJSON(geojsonData, {
+                            onEachFeature: function (feature, layer) {
+                                // إرفاق popup لكل معلم لعرض خصائصه
+                                let popupContent = '<table>';
+                                for (const key in feature.properties) {
+                                    popupContent += '<tr><td><strong>' + key + '</strong></td><td>' + feature.properties[key] + '</td></tr>';
+                                }
+                                popupContent += '</table>';
+                                layer.bindPopup(popupContent);
+                            }
+                        }).addTo(map);
+                        // ضبط المجال البصري للخريطة لتلائم البيانات
+                        map.fitBounds(geojsonLayer.getBounds());
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+    }
+
+    // وظيفة بسيطة للبحث ضمن الخصائص في بيانات GeoJSON
+    function queryFeatures() {
+        const query = document.getElementById('query-input').value.toLowerCase();
+        const resultsDiv = document.getElementById('query-results');
+        resultsDiv.innerHTML = '';
+        if (!geojsonData || !query) {
+            return;
+        }
+        let count = 0;
+        geojsonData.features.forEach(function(feature) {
+            // تحقق من وجود خاصية "name" أو أي خاصية أخرى يحتويها الشكل
+            for (const key in feature.properties) {
+                const value = String(feature.properties[key]).toLowerCase();
+                if (value.includes(query)) {
+                    count++;
+                    const resultItem = document.createElement('div');
+                    resultItem.style.borderBottom = '1px solid #ddd';
+                    resultItem.style.padding = '5px';
+                    resultItem.innerHTML = '<strong>معرف:</strong> ' + (feature.properties.id || '') + '<br>' +
+                                           '<strong>خصائص:</strong> ' + JSON.stringify(feature.properties);
+                    // عند الضغط على النتيجة، يتم تقريب الخريطة
+                    resultItem.addEventListener('click', function() {
+                        const bounds = L.geoJSON(feature).getBounds();
+                        map.fitBounds(bounds);
+                    });
+                    resultsDiv.appendChild(resultItem);
+                    break;
+                }
+            }
+        });
+        if (count === 0) {
+            resultsDiv.innerHTML = '<p>لا توجد نتائج مطابقة.</p>';
+        }
+    }
+</script>
+</body>
+</html>
