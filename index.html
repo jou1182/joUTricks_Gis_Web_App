@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>تطبيق GIS مُحسّن – رفع وعرض Shapefile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-paf6A+I4EsSr8AD+hNOCkGxmM2LhvbHf66nL/SzID8M=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css" />
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f1f1f1; }
+        #login-box { background: #fff; padding: 20px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); width: 320px; }
+        #login-box input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        #login-box button { width: 100%; padding: 10px; background: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #login-box button:hover { background: #005fa3; }
+        #map { width: 100%; height: 100vh; display: none; }
+        .sidebar { position: absolute; top: 10px; right: 10px; z-index: 1000; background: rgba(255,255,255,0.95); padding: 10px; border-radius: 4px; width: 350px; max-height: 90vh; overflow-y: auto; }
+        .sidebar h3 { margin-top: 0; }
+        .sidebar label { display: block; margin: 5px 0; }
+        .sidebar input[type="file"], .sidebar select, .sidebar input[type="text"] { width: 100%; margin-bottom: 8px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        .sidebar button { width: 100%; padding: 8px; margin-top: 5px; border: none; border-radius: 4px; background: #0078d7; color: white; cursor: pointer; }
+        .sidebar button:hover { background: #005fa3; }
+        .message { padding: 5px; margin: 5px 0; border-radius: 4px; }
+        .message.error { background: #ffe0e0; color: #900; }
+        .message.success { background: #e0ffe0; color: #090; }
+        .message.info { background: #e0f3ff; color: #036; }
+        #results { max-height: 150px; overflow-y: auto; border-top: 1px solid #ddd; margin-top: 5px; }
+        #results div { padding: 4px; border-bottom: 1px solid #eee; cursor: pointer; }
+        #results div:hover { background: #f0f8ff; }
+    </style>
+</head>
+<body>
+<div id="login-container">
+    <div id="login-box">
+        <h3 style="text-align:center;">تسجيل الدخول</h3>
+        <input type="text" id="username" placeholder="اسم المستخدم" />
+        <input type="password" id="password" placeholder="كلمة المرور" />
+        <button onclick="login()">دخول</button>
+        <p id="login-error" class="message error" style="display:none;">بيانات الدخول غير صحيحة.</p>
+    </div>
+</div>
+
+<div id="map"></div>
+<div class="sidebar" id="sidebar" style="display:none;">
+    <h3>أدوات الخريطة</h3>
+    <label for="shp-upload">تحميل ملف Shapefile (ZIP):</label>
+    <input type="file" id="shp-upload" accept=".zip" />
+    <div id="upload-message" class="message info" style="display:none;"></div>
+
+    <label for="property-select">اختر خاصية للبحث:</label>
+    <select id="property-select" disabled></select>
+    <label for="query-input">قيمة البحث:</label>
+    <input type="text" id="query-input" placeholder="قيمة البحث" disabled />
+    <button id="query-btn" onclick="runQuery()" disabled>بحث</button>
+    <div id="results"></div>
+</div>
+
+<!-- Leaflet and plugins JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44I=" crossorigin=""></script>
+<script src="https://unpkg.com/esri-leaflet@3.0.8/dist/esri-leaflet.js"></script>
+<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+<script>
+    // بيانات الدخول الافتراضية
+    const USERNAME = 'admin';
+    const PASSWORD = 'gis2025';
+    let map, baseLayers, geoLayer, geoData;
+    
+    function login() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        if (user === USERNAME && pass === PASSWORD) {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('map').style.display = 'block';
+            document.getElementById('sidebar').style.display = 'block';
+            initializeMap();
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+        }
+    }
+
+    function initializeMap() {
+        // تهيئة الخريطة
+        map = L.map('map').setView([24.7136, 46.6753], 11);
+
+        // تعريف الطبقات الأساسية
+        const imagery = L.esri.basemapLayer('Imagery');
+        const topo = L.esri.basemapLayer('Topographic');
+        const streets = L.esri.basemapLayer('Streets');
+        baseLayers = { 'صور جوية': imagery, 'طبوغرافية': topo, 'شوارع': streets };
+        imagery.addTo(map);
+        L.control.layers(baseLayers).addTo(map);
+
+        // التعامل مع رفع shapefile
+        document.getElementById('shp-upload').addEventListener('change', handleShapefile);
+    }
+
+    function showMessage(elementId, message, type) {
+        const elem = document.getElementById(elementId);
+        elem.textContent = message;
+        elem.className = 'message ' + type;
+        elem.style.display = 'block';
+    }
+
+    function resetQueryUI() {
+        document.getElementById('property-select').innerHTML = '';
+        document.getElementById('property-select').disabled = true;
+        document.getElementById('query-input').value = '';
+        document.getElementById('query-input').disabled = true;
+        document.getElementById('query-btn').disabled = true;
+        document.getElementById('results').innerHTML = '';
+    }
+
+    function handleShapefile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        resetQueryUI();
+        showMessage('upload-message', 'جاري قراءة الملف، يرجى الانتظار...', 'info');
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const buffer = e.target.result;
+            shp(buffer).then(function(geojson) {
+                if (geoLayer) { map.removeLayer(geoLayer); }
+                geoData = geojson;
+                geoLayer = L.geoJSON(geoData, {
+                    onEachFeature: function(feature, layer) {
+                        let popup = '<table>';
+                        for (const key in feature.properties) {
+                            popup += '<tr><td><strong>' + key + '</strong></td><td>' + feature.properties[key] + '</td></tr>';
+                        }
+                        popup += '</table>';
+                        layer.bindPopup(popup);
+                    }
+                }).addTo(map);
+                map.fitBounds(geoLayer.getBounds());
+                populatePropertySelect();
+                showMessage('upload-message', 'تم تحميل الطبقة بنجاح.', 'success');
+            }).catch(function(error) {
+                showMessage('upload-message', 'حدث خطأ أثناء قراءة الملف: ' + error, 'error');
+            });
+        };
+        reader.onerror = function() {
+            showMessage('upload-message', 'تعذر قراءة الملف.', 'error');
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function populatePropertySelect() {
+        const select = document.getElementById('property-select');
+        select.innerHTML = '';
+        if (!geoData || !geoData.features || geoData.features.length === 0) return;
+        const properties = Object.keys(geoData.features[0].properties);
+        properties.forEach(prop => {
+            const option = document.createElement('option');
+            option.value = prop;
+            option.textContent = prop;
+            select.appendChild(option);
+        });
+        select.disabled = false;
+        document.getElementById('query-input').disabled = false;
+        document.getElementById('query-btn').disabled = false;
+    }
+
+    function runQuery() {
+        const property = document.getElementById('property-select').value;
+        const query = document.getElementById('query-input').value.toLowerCase();
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+        if (!geoData || !property || !query) return;
+        let found = 0;
+        geoData.features.forEach(function(feat) {
+            const value = String(feat.properties[property]).toLowerCase();
+            if (value.includes(query)) {
+                found++;
+                const resultItem = document.createElement('div');
+                resultItem.textContent = feat.properties[property];
+                resultItem.addEventListener('click', function() {
+                    const layer = L.geoJSON(feat);
+                    map.fitBounds(layer.getBounds());
+                });
+                resultsDiv.appendChild(resultItem);
+            }
+        });
+        if (found === 0) {
+            resultsDiv.innerHTML = '<em>لا توجد نتائج مطابقة.</em>';
+        }
+    }
+</script>
+</body>
+</html>
